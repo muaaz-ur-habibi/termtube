@@ -1,23 +1,24 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
-from rich.spinner import Spinner
 
 from pyfiglet import print_figlet
 import shutil
 
-from pytubefix import YouTube, Search
+from pytubefix import YouTube, Search, Stream
 from urllib.parse import urlparse
 
-import logging
+import os
 
 from moviepy import *
 
-logging.getLogger("moviepy").setLevel(logging.WARNING)
+from video_player import *
 
 #-------GLOBAL VARIABLES--------#
 V_RES = "1080p"
 A_RES = ""
+CONSOLE_COLUMNS = 0
+CONSOLE_ROWS = os.get_terminal_size().lines
 
 
 dim = shutil.get_terminal_size()
@@ -105,17 +106,25 @@ def DisplaySearchResults(results:list):
             else:
                 console.print("[bold italic red]INVALID URL ENTERED. PLEASE COPY AND PASTE THE URL")
 
-def update_prog(stream, chunk, bytes_remaining):
+# pretty status updaters of downloading audio and video
+def update_prog_vid(stream, chunk, bytes_remaining):
     total = stream.filesize
     downloaded = total - bytes_remaining
     perc = (downloaded/total) * 100
-
     prog_v.update(task_v, advance=int(perc))
 
-def fin_prog(stream, filepath):
+def fin_prog_vid(stream, filepath):console.print("[green bold]Video downloaded (THIS IS THE VIDEO ONE DAMNIT)")
 
-    console.print("[green bold]Video downloaded")
+def update_prog_aud(stream, chunk, bytes_remaining):
+    total = stream.filesize
+    downloaded = total - bytes_remaining
+    perc = (downloaded/total) * 100
+    prog_a.update(task_a, advance=int(perc))
 
+def fin_prog_aud(stream, filepath):console.print("[green bold]Audio downloaded")
+
+# function to concatenate audio and video
+# using moviepy
 def CONCATENATE_AUD_VID(aud_path,
                         vid_path,
                         save_path):
@@ -128,6 +137,7 @@ def CONCATENATE_AUD_VID(aud_path,
     conc.write_videofile(save_path, logger=None)
     console.print("[bold green]Video built successfully")
 
+# if user wants to copy to download other video while watching
 def CopyVIDEO(copy_folder):
     copy = console.input("Would you like to make a copy of the video you just downloaded?\n[blue](y/n)[/blue]👉 ")
 
@@ -138,7 +148,28 @@ def CopyVIDEO(copy_folder):
             copy_file.write(read_file.read())
             console.print("[green bold]Copied into COPY.mp4 successfully")
 
+def BuildAndPlayVideo(fps):
+    player = Player("temp/curr_vid.mp4", "temp/curr_aud.mp3", "player_temp", "player_frames")
 
+    try:
+        with console.status("[bold yellow]Splitting video into frames...", spinner="dots2") as spin:
+            player.split_video_into_frames()
+    except KeyboardInterrupt:
+        console.print("[bold red]Keyboard interrupt detected. Quiting frame splitting process")
+
+    try:
+        with console.status("[bold yellow]Setting framerate...", spinner="dots2") as spin:
+            player.set_framerate(1)
+    except KeyboardInterrupt:
+        console.print("[bold red]Keyboard interrupt detected. Exiting framerate setting process")
+
+    console.input("[bold italic purple3]All processing has been done. Video is ready to launch.\nJust press {ENTER}")
+
+    CONSOLE_COLUMNS = os.get_terminal_size().columns
+    if CONSOLE_COLUMNS % 2 != 0:
+        CONSOLE_COLUMNS -= 1
+
+    player.PLAY(CONSOLE_COLUMNS)
 
 if __name__ == "__main__":
     # just some basic setting up and main menu type displaying
@@ -153,11 +184,13 @@ if __name__ == "__main__":
     search_for = console.input("Enter the search term\n👉 ")
 
     # create the search object
-    s = Search(search_for)
+    with console.status("[bold yellow]Searching...", spinner="aesthetic") as spin:
+        s = Search(search_for)
     # create pretty panels to display the search results in
     # and also get the url of video to watch
     url_to_watch = DisplaySearchResults(s.videos)
-    Video_obj = YouTube(url_to_watch, on_progress_callback=update_prog, on_complete_callback=fin_prog)
+    Video_obj = YouTube(url_to_watch, on_progress_callback=update_prog_vid, on_complete_callback=fin_prog_vid)
+    Audio_obj = YouTube(url_to_watch, on_progress_callback=update_prog_aud, on_complete_callback=fin_prog_aud)
 
     # get video and audio seperately   
     # since most dont have them together
@@ -168,10 +201,15 @@ if __name__ == "__main__":
     with Progress(console=console, transient=True) as prog_v:
         task_v = prog_v.add_task("[bold yellow]Downloading video...")
         vid[0].download("temp", "curr_vid.mp4")
+    
+    with Progress(console=console, transient=True) as prog_a:
+        task_a = prog_a.add_task("[bold yellow]Downloading audio...")
         aud[0].download("temp", "curr_aud.mp3")
 
+    # NO NEED FOR THIS AS VIDEO AND AUDIO WILL BE PROCESSED SEPERATELY
     # concatenate the audio and video together
-    #console.print("[bold yellow]Concatenating audio and video...")
-    with Spinner('aesthetic', "[bold yellow]Concatenating audio and video...") as spin:
-        CONCATENATE_AUD_VID("temp/curr_aud.mp3", "temp/curr_vid.mp4", "temp/VIDEO.mp4")
-    CopyVIDEO("temp")
+    #with console.status("[bold yellow]Concatenating audio and video...", spinner="aesthetic") as spin:
+        #CONCATENATE_AUD_VID("temp/curr_aud.mp3", "temp/curr_vid.mp4", "temp/VIDEO.mp4")
+    #CopyVIDEO("temp")
+
+    BuildAndPlayVideo(fps=vid[0].fps)
