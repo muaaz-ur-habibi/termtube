@@ -1,13 +1,10 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
-from rich.progress_bar import ProgressBar
+from rich.spinner import Spinner
 
 from pyfiglet import print_figlet
 import shutil
-
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from pytubefix import YouTube, Search
 from urllib.parse import urlparse
@@ -128,7 +125,8 @@ def CONCATENATE_AUD_VID(aud_path,
 
     conc = v_clip.with_audio(a_clip)
 
-    conc.write_videofile(save_path)
+    conc.write_videofile(save_path, logger=None)
+    console.print("[bold green]Video built successfully")
 
 def CopyVIDEO(copy_folder):
     copy = console.input("Would you like to make a copy of the video you just downloaded?\n[blue](y/n)[/blue]👉 ")
@@ -158,7 +156,7 @@ if __name__ == "__main__":
     s = Search(search_for)
     # create pretty panels to display the search results in
     # and also get the url of video to watch
-    url_to_watch = DisplaySearchResults(s.results)
+    url_to_watch = DisplaySearchResults(s.videos)
     Video_obj = YouTube(url_to_watch, on_progress_callback=update_prog, on_complete_callback=fin_prog)
 
     # get video and audio seperately   
@@ -173,6 +171,7 @@ if __name__ == "__main__":
         aud[0].download("temp", "curr_aud.mp3")
 
     # concatenate the audio and video together
-    console.print("[bold yellow]Concatenating audio and video...")
-    CONCATENATE_AUD_VID("temp/curr_aud.mp3", "temp/curr_vid.mp4", "temp/VIDEO.mp4")
+    #console.print("[bold yellow]Concatenating audio and video...")
+    with Spinner('aesthetic', "[bold yellow]Concatenating audio and video...") as spin:
+        CONCATENATE_AUD_VID("temp/curr_aud.mp3", "temp/curr_vid.mp4", "temp/VIDEO.mp4")
     CopyVIDEO("temp")
