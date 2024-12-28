@@ -1,2 +1,3 @@
-# terminal-youtube
-Use youtube right in your terminal! Created using Python's Rich and Pytube libraries
+<h1 align="center">TermTube</h1>
+<h3>Youtube, right in your terminal</h3>
+<hr>
