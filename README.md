@@ -11,5 +11,12 @@ Meet TermTube: Watch youtube right in your terminal<br>
   <li>A maximum of 17 search results</li>
   <li>Very vibrant output</li>
   <li>Videos played as ASCII art, paired with full RGB support</li>
+  <li>Audio is also played with video</li>
 </ul>
 <hr>
+<h2>Drawbacks</h2>
+<ul>
+  <li>Only usable on terminals that support RGB</li>
+  <li>Audio synchronisation issues with longer videos</li>
+  <li>Some videos are unable to be downloaded</li>
+</ul>
