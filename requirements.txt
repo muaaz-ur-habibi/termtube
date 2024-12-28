@@ -1,0 +1,8 @@
+moviepy==2.1.1
+opencv_python==4.6.0.66
+Pillow==10.4.0
+pyfiglet==1.0.2
+pygame==2.6.1
+pytube==12.1.2
+pytubefix==8.8.2
+rich==13.9.4
