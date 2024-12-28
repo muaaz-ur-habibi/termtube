@@ -3,6 +3,13 @@
 <hr>
 Ever get bored of watching videos on your browser?<br>
 Want something thats not so modern and GUI based?<br>
-<b><i>BEHOLD</i> my latest INVENTION: TermTube</b><br>
-<br>
-Using this piece of software you can watch videos right in your CONSOLE/TERMINAL!<br>
+Meet TermTube: Watch youtube right in your terminal<br>
+<hr>
+<h4>Features</h4>
+<ul>
+  <li>Searching of youtube videos available</li>
+  <li>A maximum of 17 search results</li>
+  <li>Very vibrant output</li>
+  <li>Videos played as ASCII art, paired with full RGB support</li>
+</ul>
+<hr>
